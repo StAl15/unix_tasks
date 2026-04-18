@@ -5,7 +5,7 @@
  *   Программа читает входной поток поблочно и записывает данные в выходной файл.
  *   Блоки, целиком заполненные нулевыми байтами, на диск не записываются —
  *   вместо этого позиция в выходном файле сдвигается вперёд вызовом lseek().
- *   Такой приём создаёт «дыры» (holes) в файле: операционная система не
+ *   Такой приём создаёт "дыры" в файле: операционная система не
  *   выделяет под них дисковые блоки, но при чтении возвращает нулевые байты.
  *   В конце работы ftruncate() выставляет правильный логический размер файла,
  *   чтобы хвостовая дыра (если файл заканчивается нулями) не была потеряна.
@@ -20,14 +20,14 @@
 
 #define _POSIX_C_SOURCE 200809L  /* включает ftruncate() и прочие POSIX-расширения */
 
-#include <stdio.h>    /* fprintf, stderr                        */
-#include <stdlib.h>   /* malloc, free, exit, atoi               */
-#include <string.h>   /* strerror                               */
-#include <fcntl.h>    /* open, O_RDONLY, O_WRONLY, O_CREAT …   */
-#include <unistd.h>   /* read, write, lseek, close, ftruncate  */
-#include <errno.h>    /* errno — код последней системной ошибки */
-#include <getopt.h>   /* getopt — разбор аргументов командной строки */
-#include <sys/types.h>/* off_t, ssize_t                         */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <getopt.h>
+#include <sys/types.h>
 
 /* Размер блока обработки по умолчанию. */
 #define DEFAULT_BLOCK_SIZE 4096
@@ -71,14 +71,6 @@ static int is_zero_block(const unsigned char *buf, ssize_t len) {
 }
 
 int main(int argc, char *argv[]) {
-    /*
-     * block_size — размер одного блока обработки в байтах.
-     * Входные данные читаются и анализируются порциями этого размера.
-     * Именно поблочный анализ важен: бессмысленно записать 1 байт, сделать
-     * lseek на 315 байт и записать ещё 1 байт — всё равно будет выделен
-     * один дисковый блок. Эффект разреженности достигается только тогда,
-     * когда пропускаемый диапазон кратен блоку файловой системы.
-     */
     int block_size = DEFAULT_BLOCK_SIZE;
     int opt; /* текущая опция, возвращаемая getopt() */
 
@@ -140,11 +132,7 @@ int main(int argc, char *argv[]) {
         const char *in_path = argv[optind];
         out_path = argv[optind + 1];
 
-        /*
-         * open() с флагом O_RDONLY открывает файл только для чтения.
-         * При ошибке возвращает -1 и устанавливает errno.
-         * strerror(errno) переводит код ошибки в читаемую строку.
-         */
+        
         fd_in = open(in_path, O_RDONLY);
         if (fd_in < 0) {
             fprintf(stderr, "Ошибка открытия входного файла '%s': %s\n", in_path, strerror(errno));
@@ -189,7 +177,7 @@ int main(int argc, char *argv[]) {
      *   работать с файлами размером до 8 ЭиБ.
      *
      * pending_zeros — количество нулевых байт, накопленных с момента последней
-     *   фактической записи, но ещё не «пропущенных» через lseek().
+     *   фактической записи, но ещё не "пропущенных" через lseek().
      *   Накопление позволяет объединить несколько подряд идущих нулевых блоков
      *   в один вызов lseek() вместо многократных прыжков.
      */
@@ -233,10 +221,10 @@ int main(int argc, char *argv[]) {
         } else {
             /*
              * Блок содержит хотя бы один ненулевой байт.
-             * Сначала «перепрыгиваем» через все накопленные нули:
+             * Сначала "перепрыгиваем" через все накопленные нули:
              * lseek(fd_out, pending_zeros, SEEK_CUR) сдвигает текущую позицию
              * записи на pending_zeros байт вперёд, не записывая на диск ничего.
-             * Именно этот вызов создаёт «дыру» (hole) в разреженном файле.
+             * Таким образом создается последовательность нулевых байт
              */
             if (pending_zeros > 0) {
                 if (lseek(fd_out, pending_zeros, SEEK_CUR) == (off_t)-1) {
@@ -297,7 +285,7 @@ int main(int argc, char *argv[]) {
 
     /* Освобождаем ресурсы: память и файловые дескрипторы. */
     free(buf);
-    if (fd_in != STDIN_FILENO) close(fd_in); /* stdin закрывать не нужно */
+    if (fd_in != STDIN_FILENO) close(fd_in);
     close(fd_out);
 
     return EXIT_SUCCESS;
